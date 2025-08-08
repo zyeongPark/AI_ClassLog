@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 학급일지 자동화 시스템</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI 학급 비서</h1>
+            <p>대화의 맥락을 이해하고, 선생님의 판단으로 기록을 재분류합니다.</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- 왼쪽 패널: 업로드 및 AI 분석 -->
+            <div class="left-panel">
+                <h2 class="section-title">📄 데이터 입력</h2>
+                
+                <div class="upload-section">
+                    <h3>1. 텍스트 직접 입력</h3>
+                    <textarea id="textInput" placeholder="수업 내용을 직접 입력하거나 붙여넣기 하세요...&#10;&#10;예시:&#10;오늘 1교시에 준우가 발표를 잘했습니다.&#10;영민이가 질문을 많이 했고,&#10;대성이는 조금 장난을 쳤지만 나중에 집중했습니다." rows="8"></textarea>
+                    <button class="analyze-btn" onclick="analyzeText()">
+                        🧠 텍스트 AI 분석
+                    </button>
+                </div>
+                
+                <div class="divider">또는</div>
+                
+                <div class="upload-section">
+                    <h3>2. 텍스트 파일 업로드</h3>
+                    <div class="upload-box" onclick="document.getElementById('textFile').click()">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-text">수업 텍스트 파일 업로드</div>
+                        <div class="upload-hint">TXT 파일을 선택해주세요</div>
+                    </div>
+                    <input type="file" id="textFile" accept=".txt" style="display: none;">
+                </div>
+                
+                <div class="divider">또는</div>
+                
+                <div class="upload-section">
+                    <h3>3. 음성 파일 업로드</h3>
+                    <div class="upload-box" onclick="document.getElementById('audioFile').click()">
+                        <div class="upload-icon">🎤</div>
+                        <div class="upload-text">수업 음성 파일 업로드</div>
+                        <div class="upload-hint">MP3, WAV, M4A 등 음성 파일</div>
+                    </div>
+                    <input type="file" id="audioFile" accept="audio/*" style="display: none;">
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">AI가 분석 중입니다...</div>
+                </div>
+                
+                <div class="ai-summary">
+                    <h4>🤖 AI 분석 현황</h4>
+                    <p id="analysisStatus">텍스트나 파일을 업로드하면 GPT가 자동으로 학급일지를 생성합니다.</p>
+                </div>
+                
+                <div class="control-buttons">
+                    <button onclick="showOriginalText()" class="btn btn-secondary">
+                        📜 원본 내용 보기
+                    </button>
+                    <button onclick="clearAll()" class="btn btn-secondary">
+                        🗑️ 전체 초기화
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 오른쪽 패널: 결과 표시 -->
+            <div class="right-panel">
+                <h2 class="section-title">📊 2025년 1학년 1반 학급일지</h2>
+                
+                <div class="period-tabs">
+                    <div class="period-tab active" data-period="all">전체</div>
+                    <div class="period-tab" data-period="1">1교시</div>
+                    <div class="period-tab" data-period="2">2교시</div>
+                    <div class="period-tab" data-period="3">3교시</div>
+                    <div class="period-tab" data-period="4">4교시</div>
+                </div>
+                
+                <div id="summarySection" style="display: none;">
+                    <div class="ai-summary">
+                        <h4>📈 AI 수업 분석 결과</h4>
+                        <div id="dailySummary"></div>
+                    </div>
+                </div>
+                
+                <table class="diary-table">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>발표</th>
+                            <th>질문</th>
+                            <th>협동/칭찬</th>
+                            <th>과제수행</th>
+                            <th>갈등</th>
+                            <th>장난/산만</th>
+                            <th>총점</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px; color: #999;">
+                                텍스트를 입력하거나 파일을 업로드하면 AI 분석 결과가 표시됩니다
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 학생 상세 모달 -->
+    <div id="studentModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 id="modalTitle">학생 상세 분석</h2>
+            
+            <div class="social-emotional-section">
+                <h3>🧠 사회정서역량 분석</h3>
+                <div class="competency-grid">
+                    <div class="competency-card" id="selfAwareness">
+                        <h4>자기인식</h4>
+                        <div class="competency-score">0</div>
+                        <div class="competency-desc">자신의 감정, 생각, 행동 인식</div>
+                    </div>
+                    <div class="competency-card" id="selfRegulation">
+                        <h4>자기조절</h4>
+                        <div class="competency-score">0</div>
+                        <div class="competency-desc">감정과 행동의 적절한 관리</div>
+                    </div>
+                    <div class="competency-card" id="socialAwareness">
+                        <h4>사회적 인식</h4>
+                        <div class="competency-score">0</div>
+                        <div class="competency-desc">타인과 상황에 대한 이해</div>
+                    </div>
+                    <div class="competency-card" id="relationshipSkills">
+                        <h4>관계 기술</h4>
+                        <div class="competency-score">0</div>
+                        <div class="competency-desc">건강한 인간관계 형성</div>
+                    </div>
+                    <div class="competency-card" id="responsibleDecision">
+                        <h4>책임감 있는 의사결정</h4>
+                        <div class="competency-score">0</div>
+                        <div class="competency-desc">윤리적이고 건설적인 선택</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-section">
+                <h3>📈 역량 변화 추이</h3>
+                <div class="chart-placeholder">
+                    📊 누적 데이터 기반 역량 변화 그래프<br>
+                    <small>(실제 서비스에서는 Chart.js로 구현)</small>
+                </div>
+            </div>
+            
+            <div id="studentInteractions">
+                <h4>🔍 상호작용 내역</h4>
+                <div id="interactionList"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 원본 텍스트 모달 -->
+    <div id="originalModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeOriginalModal()">&times;</button>
+            <h2>📜 원본 수업 내용</h2>
+            <div id="originalContent">
+                <p style="color: #666; text-align: center; padding: 40px;">
+                    아직 분석된 내용이 없습니다
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
